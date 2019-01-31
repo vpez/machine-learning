@@ -9,8 +9,11 @@ Created on Thu Jan 31 09:16:58 2019
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns; sns.set(style="ticks", color_codes = True)
 
 dataset = pd.read_csv('datasets/Position_Salaries.csv')
+
+g = sns.pairplot(dataset, vars = ["Level", "Salary"])
 
 x = dataset.iloc[:, 1:2].values
 y = dataset.iloc[:, 2].values
