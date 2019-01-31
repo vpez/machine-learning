@@ -16,6 +16,11 @@ y = dataset.iloc[:, 2].values
 
 from sklearn.tree import DecisionTreeRegressor
 regressor = DecisionTreeRegressor(random_state = 0)
+
+# Using Random Forest
+#from sklearn.ensemble import RandomForestRegressor
+#regressor = RandomForestRegressor(n_estimators = 22, random_state = 0)
+
 regressor.fit(x, y)
 
 y_pred = regressor.predict([[6.5]])
