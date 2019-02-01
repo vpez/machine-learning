@@ -13,6 +13,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer, Standard
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+import statsmodels.formula.api as sm
 
 dataset = pd.read_csv('datasets/housing-prices/train.csv')
 
@@ -83,6 +84,31 @@ r2 = r2_score(y_test, y_pred)
 print()
 print("R2 score: " + '{0:.3f}'.format(r2))
 print()
+
+### Backward elimination
+
+### Maximum index getter
+def getMax(p_values):
+    index_max = 0
+    for i in range(0, len(p_values)):
+        if (p_values[i] >= p_values[index_max]):
+            index_max = i
+    return index_max
+
+### Adding X0
+x = np.append(arr = np.ones((x.shape[0], 1)).astype(int), values = x, axis = 1)
+
+include = np.arange(x.shape[1]).tolist()
+
+while (len(include) > 20):
+    x_opt = x [:, include]
+    regressor_OLS = sm.OLS(endog = y, exog = x_opt).fit()
+    regressor_OLS.summary()
+    idx = getMax(regressor_OLS.pvalues)
+    del(include[idx])
+
+print(regressor_OLS.summary())
+
 
 ### Visualizing the Training Set results
 #x_name = 'GrLivArea'
