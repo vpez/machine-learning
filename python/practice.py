@@ -24,7 +24,9 @@ numeric_columns = ['LotFrontage', 'LotArea', 'OverallQual', 'OverallCond', 'Year
                    'GarageYrBlt', 'GarageCars', 'GarageArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch',
                    '3SsnPorch', 'ScreenPorch', 'PoolArea', 'MiscVal', 'YrSold']
 
-categorical_columns = ['HouseStyle', 'LotShape', 'SaleCondition', 'Utilities']
+categorical_columns = ['HouseStyle', 'LotShape', 'SaleCondition', 'Utilities',
+                       'MSZoning', 'Street', 'LotConfig', 'Neighborhood',
+                       'SaleType']
 
 x = dataset.iloc[:, 0:80].values
 y = np.array(dataset.iloc[:, -1].values).reshape(-1, 1)
@@ -80,9 +82,9 @@ regressor.fit(x_train, y_train)
 y_pred = regressor.predict(x_test)
 
 ### Accuracy score
-r2 = r2_score(y_test, y_pred)
+r2_before = r2_score(y_test, y_pred)
 print()
-print("R2 score: " + '{0:.3f}'.format(r2))
+print("R2 score (Before): " + '{0:.3f}'.format(r2_before))
 print()
 
 ### Backward elimination
@@ -100,21 +102,37 @@ x = np.append(arr = np.ones((x.shape[0], 1)).astype(int), values = x, axis = 1)
 
 include = np.arange(x.shape[1]).tolist()
 
-while (len(include) > 20):
+### Eliminate columns until 10 remain
+### Instead, can check the p-value until no p-value is larger than 0.05
+while (len(include) > 10):
     x_opt = x [:, include]
     regressor_OLS = sm.OLS(endog = y, exog = x_opt).fit()
-    regressor_OLS.summary()
     idx = getMax(regressor_OLS.pvalues)
     del(include[idx])
 
-print(regressor_OLS.summary())
+x_train, x_test, y_train, y_test = train_test_split(x_opt, y, test_size = 1/3, random_state = 0)
 
+### Fitting the model with polynomial
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures(degree = 2)
+x_poly = poly.fit_transform(x_train)
+regressor_2 = LinearRegression()
+regressor_2.fit(x_poly, y_train)
 
-### Visualizing the Training Set results
-#x_name = 'GrLivArea'
-#plt.scatter(x_train[:,numeric_columns.index(x_name)], y_train, color = 'black')
-#plt.plot(x_train, regressor.predict(x_train), color = 'blue')
-#plt.title('Price vs. ' + x_name + ' (Training Set)')
-#plt.xlabel(x_name)
-#plt.ylabel('Price')
-#plt.show()
+### Predict
+y_pred = regressor_2.predict(poly.transform(x_test))
+
+### Accuracy score
+r2_after = r2_score(y_test, y_pred)
+print()
+print("R2 score (After): " + '{0:.3f}'.format(r2_after))
+print()
+
+### Plot real values with predictions
+size = 30
+y_test_val = scaler_y.inverse_transform(y_test[:size, :])
+y_pred_val = scaler_y.inverse_transform(y_pred[:size, :])
+x_axis = np.arange(size)
+plt.scatter(x_axis, y_test_val, color = 'black')
+plt.scatter(x_axis, y_pred_val, color = 'red')
+plt.show()
